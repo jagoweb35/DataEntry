@@ -1,0 +1,2145 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Universal Data Entry System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        font-family: "Outfit", sans-serif;
+      }
+
+      body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+      }
+
+      .glass-panel {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .menu-card {
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+      }
+
+      .menu-card:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      }
+
+      .menu-card.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        transform: scale(1.05);
+      }
+
+      .form-input {
+        transition: all 0.3s ease;
+      }
+
+      .form-input:focus {
+        transform: translateX(5px);
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      .data-row {
+        animation: slideIn 0.4s ease-out;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateX(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      .delete-btn {
+        transition: all 0.3s ease;
+      }
+
+      .delete-btn:hover {
+        background: #ef4444;
+        color: white;
+        transform: rotate(90deg);
+      }
+
+      .edit-btn {
+        transition: all 0.3s ease;
+      }
+
+      .edit-btn:hover {
+        background: #3b82f6;
+        color: white;
+        transform: scale(1.1);
+      }
+
+      .fade-in {
+        animation: fadeIn 0.5s ease-out;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .stats-card {
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.9) 0%,
+          rgba(255, 255, 255, 0.7) 100%
+        );
+      }
+
+      /* Custom scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 4px;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        transition: all 0.3s ease;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px -5px rgba(102, 126, 234, 0.4);
+      }
+
+      .empty-state {
+        background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+      }
+
+      .menu-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 1rem;
+      }
+
+      @media (max-width: 640px) {
+        .menu-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      .level-badge {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-weight: bold;
+        color: white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+    </style>
+  </head>
+  <body class="p-4 md:p-8">
+    <div class="max-w-7xl mx-auto">
+      <!-- Header -->
+      <div class="glass-panel rounded-3xl p-6 mb-6 shadow-2xl">
+        <div
+          class="flex flex-col md:flex-row justify-between items-center gap-4"
+        >
+          <div class="flex items-center gap-4">
+            <div
+              class="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-2xl shadow-lg"
+            >
+              <i class="fas fa-database"></i>
+            </div>
+            <div>
+              <h1 class="text-3xl font-bold text-gray-800">
+                Universal Data Entry
+              </h1>
+              <p class="text-gray-600">Sistem manajemen data serbaguna</p>
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <button
+              onclick="exportData()"
+              class="px-4 py-2 bg-green-500 text-white rounded-xl hover:bg-green-600 transition-all flex items-center gap-2 shadow-lg"
+            >
+              <i class="fas fa-download"></i>
+              <span class="hidden sm:inline">Export CSV</span>
+            </button>
+            <label
+              class="px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all flex items-center gap-2 shadow-lg cursor-pointer"
+            >
+              <i class="fas fa-upload"></i>
+              <span class="hidden sm:inline">Import CSV</span>
+              <input
+                type="file"
+                id="importFile"
+                accept=".csv"
+                class="hidden"
+                onchange="importData(this)"
+              />
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Menu Selection -->
+      <div class="mb-8">
+        <h2
+          class="text-white text-xl font-semibold mb-4 flex items-center gap-2"
+        >
+          <i class="fas fa-th-large"></i>
+          Pilih Jenis Data Entry
+        </h2>
+        <div class="menu-grid" id="menuContainer">
+          <!-- Menu items will be generated here -->
+        </div>
+      </div>
+
+      <!-- Main Content Area -->
+      <div class="grid lg:grid-cols-3 gap-6">
+        <!-- Form Section -->
+        <div class="lg:col-span-1">
+          <div class="glass-panel rounded-3xl p-6 shadow-2xl sticky top-6">
+            <div class="flex items-center justify-between mb-6">
+              <h3
+                class="text-xl font-bold text-gray-800 flex items-center gap-2"
+              >
+                <i class="fas fa-edit text-indigo-600"></i>
+                <span id="formTitle">Form Entry</span>
+              </h3>
+              <span
+                id="recordCount"
+                class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-semibold"
+                >0 records</span
+              >
+            </div>
+
+            <form id="dataForm" class="space-y-4">
+              <div id="formFields" class="space-y-4">
+                <!-- Dynamic form fields -->
+              </div>
+
+              <div class="pt-4 flex gap-3">
+                <button
+                  type="submit"
+                  class="btn-primary flex-1 text-white py-3 rounded-xl font-semibold shadow-lg flex items-center justify-center gap-2"
+                >
+                  <i class="fas fa-save"></i>
+                  <span id="submitBtnText">Simpan Data</span>
+                </button>
+                <button
+                  type="button"
+                  onclick="resetForm()"
+                  class="px-4 py-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-all"
+                >
+                  <i class="fas fa-undo"></i>
+                </button>
+              </div>
+            </form>
+
+            <!-- Quick Stats -->
+            <div class="mt-6 pt-6 border-t border-gray-200">
+              <div class="grid grid-cols-2 gap-3">
+                <div class="stats-card p-3 rounded-xl text-center">
+                  <div
+                    class="text-2xl font-bold text-indigo-600"
+                    id="totalRecords"
+                  >
+                    0
+                  </div>
+                  <div class="text-xs text-gray-600">Total Records</div>
+                </div>
+                <div class="stats-card p-3 rounded-xl text-center">
+                  <div
+                    class="text-2xl font-bold text-green-600"
+                    id="todayRecords"
+                  >
+                    0
+                  </div>
+                  <div class="text-xs text-gray-600">Added Today</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Data Table Section -->
+        <div class="lg:col-span-2">
+          <div class="glass-panel rounded-3xl p-6 shadow-2xl min-h-[600px]">
+            <div
+              class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6"
+            >
+              <h3
+                class="text-xl font-bold text-gray-800 flex items-center gap-2"
+              >
+                <i class="fas fa-table text-indigo-600"></i>
+                Data
+                <span id="currentDataType" class="text-indigo-600"
+                  >Karyawan</span
+                >
+              </h3>
+              <div class="flex gap-2 w-full sm:w-auto">
+                <div class="relative flex-1 sm:flex-none">
+                  <i
+                    class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                  ></i>
+                  <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="Cari data..."
+                    class="pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full sm:w-64"
+                    onkeyup="searchData()"
+                  />
+                </div>
+                <button
+                  onclick="clearAllData()"
+                  class="px-4 py-2 bg-red-100 text-red-600 rounded-xl hover:bg-red-200 transition-all"
+                  title="Hapus Semua"
+                >
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto rounded-2xl border border-gray-200">
+              <table class="w-full text-left border-collapse">
+                <thead
+                  id="tableHeader"
+                  class="bg-gradient-to-r from-indigo-50 to-purple-50"
+                >
+                  <!-- Dynamic headers -->
+                </thead>
+                <tbody id="tableBody" class="divide-y divide-gray-100">
+                  <!-- Dynamic rows -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Empty State -->
+            <div
+              id="emptyState"
+              class="hidden empty-state rounded-2xl p-12 text-center mt-4"
+            >
+              <div
+                class="w-24 h-24 mx-auto mb-4 bg-gray-200 rounded-full flex items-center justify-center text-gray-400 text-4xl"
+              >
+                <i class="fas fa-inbox"></i>
+              </div>
+              <h4 class="text-lg font-semibold text-gray-700 mb-2">
+                Belum ada data
+              </h4>
+              <p class="text-gray-500">
+                Silakan tambahkan data menggunakan form di sebelah kiri
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div
+      id="toast"
+      class="fixed bottom-4 right-4 transform translate-y-20 opacity-0 transition-all duration-300 z-50"
+    >
+      <div
+        class="bg-gray-800 text-white px-6 py-3 rounded-xl shadow-2xl flex items-center gap-3"
+      >
+        <i id="toastIcon" class="fas fa-check-circle text-green-400"></i>
+        <span id="toastMessage">Operasi berhasil!</span>
+      </div>
+    </div>
+
+    <script>
+      // Data Templates Configuration
+      const dataTemplates = {
+        karyawan: {
+          label: "Data Karyawan",
+          icon: "fa-user-tie",
+          color: "from-blue-500 to-blue-600",
+          fields: [
+            {
+              name: "id",
+              label: "ID Karyawan",
+              type: "text",
+              placeholder: "EMP001",
+              required: true,
+            },
+            {
+              name: "nama",
+              label: "Nama Lengkap",
+              type: "text",
+              placeholder: "John Doe",
+              required: true,
+            },
+            {
+              name: "jabatan",
+              label: "Jabatan",
+              type: "select",
+              options: ["Manager", "Supervisor", "Staff", "Intern"],
+              required: true,
+            },
+            {
+              name: "departemen",
+              label: "Departemen",
+              type: "select",
+              options: ["IT", "HR", "Finance", "Marketing", "Operations"],
+              required: true,
+            },
+            {
+              name: "email",
+              label: "Email",
+              type: "email",
+              placeholder: "email@company.com",
+              required: true,
+            },
+            {
+              name: "telepon",
+              label: "No. Telepon",
+              type: "tel",
+              placeholder: "08123456789",
+              required: false,
+            },
+            {
+              name: "tanggalMasuk",
+              label: "Tanggal Masuk",
+              type: "date",
+              required: true,
+            },
+            {
+              name: "gaji",
+              label: "Gaji Pokok",
+              type: "number",
+              placeholder: "5000000",
+              required: false,
+            },
+            {
+              name: "status",
+              label: "Status",
+              type: "select",
+              options: ["Aktif", "Cuti", "Non-Aktif"],
+              required: true,
+            },
+          ],
+        },
+        // SISWA SD
+        siswa_sd: {
+          label: "Data Siswa SD",
+          icon: "fa-child",
+          color: "from-yellow-400 to-orange-500",
+          badge: "SD",
+          badgeColor: "bg-yellow-500",
+          fields: [
+            {
+              name: "nisn",
+              label: "NISN",
+              type: "text",
+              placeholder: "0123456789",
+              required: true,
+            },
+            {
+              name: "nama",
+              label: "Nama Lengkap",
+              type: "text",
+              placeholder: "Budi Santoso",
+              required: true,
+            },
+            {
+              name: "kelas",
+              label: "Kelas",
+              type: "select",
+              options: [
+                "1A",
+                "1B",
+                "2A",
+                "2B",
+                "3A",
+                "3B",
+                "4A",
+                "4B",
+                "5A",
+                "5B",
+                "6A",
+                "6B",
+              ],
+              required: true,
+            },
+            {
+              name: "jenisKelamin",
+              label: "Jenis Kelamin",
+              type: "select",
+              options: ["Laki-laki", "Perempuan"],
+              required: true,
+            },
+            {
+              name: "tanggalLahir",
+              label: "Tanggal Lahir",
+              type: "date",
+              required: true,
+            },
+            {
+              name: "namaOrtu",
+              label: "Nama Orang Tua/Wali",
+              type: "text",
+              placeholder: "Nama Ayah/Ibu",
+              required: true,
+            },
+            {
+              name: "teleponOrtu",
+              label: "Telepon Ortu",
+              type: "tel",
+              placeholder: "08123456789",
+              required: true,
+            },
+            {
+              name: "alamat",
+              label: "Alamat",
+              type: "textarea",
+              placeholder: "Alamat lengkap...",
+              required: true,
+            },
+            {
+              name: "tanggalMasuk",
+              label: "Tanggal Masuk",
+              type: "date",
+              required: true,
+            },
+            {
+              name: "status",
+              label: "Status",
+              type: "select",
+              options: ["Aktif", "Pindah", "Lulus", "Drop Out"],
+              required: true,
+            },
+          ],
+        },
+        // SISWA SMP
+        siswa_smp: {
+          label: "Data Siswa SMP",
+          icon: "fa-user-graduate",
+          color: "from-cyan-500 to-blue-500",
+          badge: "SMP",
+          badgeColor: "bg-cyan-500",
+          fields: [
+            {
+              name: "nisn",
+              label: "NISN",
+              type: "text",
+              placeholder: "0123456789",
+              required: true,
+            },
+            {
+              name: "nama",
+              label: "Nama Lengkap",
+              type: "text",
+              placeholder: "Ani Wijaya",
+              required: true,
+            },
+            {
+              name: "kelas",
+              label: "Kelas",
+              type: "select",
+              options: ["7A", "7B", "7C", "8A", "8B", "8C", "9A", "9B", "9C"],
+              required: true,
+            },
+            {
+              name: "jenisKelamin",
+              label: "Jenis Kelamin",
+              type: "select",
+              options: ["Laki-laki", "Perempuan"],
+              required: true,
+            },
+            {
+              name: "tanggalLahir",
+              label: "Tanggal Lahir",
+              type: "date",
+              required: true,
+            },
+            {
+              name: "namaOrtu",
+              label: "Nama Orang Tua/Wali",
+              type: "text",
+              placeholder: "Nama Ayah/Ibu",
+              required: true,
+            },
+            {
+              name: "teleponOrtu",
+              label: "Telepon Ortu",
+              type: "tel",
+              placeholder: "08123456789",
+              required: true,
+            },
+            {
+              name: "alamat",
+              label: "Alamat",
+              type: "textarea",
+              placeholder: "Alamat lengkap...",
+              required: true,
+            },
+            {
+              name: "nilaiRata",
+              label: "Nilai Rata-rata",
+              type: "number",
+              placeholder: "85.5",
+              step: "0.01",
+              required: false,
+            },
+            {
+              name: "ekskul",
+              label: "Ekstrakurikuler",
+              type: "text",
+              placeholder: "Pramuka, Basket, dll",
+              required: false,
+            },
+            {
+              name: "tanggalMasuk",
+              label: "Tanggal Masuk",
+              type: "date",
+              required: true,
+            },
+            {
+              name: "status",
+              label: "Status",
+              type: "select",
+              options: ["Aktif", "Pindah", "Lulus", "Drop Out"],
+              required: true,
+            },
+          ],
+        },
+        // SISWA SMA/SMK
+        siswa_sma: {
+          label: "Data Siswa SMA/SMK",
+          icon: "fa-graduation-cap",
+          color: "from-purple-500 to-pink-500",
+          badge: "SMA",
+          badgeColor: "bg-purple-500",
+          fields: [
+            {
+              name: "nisn",
+              label: "NISN",
+              type: "text",
+              placeholder: "0123456789",
+              required: true,
+            },
+            {
+              name: "nama",
+              label: "Nama Lengkap",
+              type: "text",
+              placeholder: "Rina Susanti",
+              required: true,
+            },
+            {
+              name: "kelas",
+              label: "Kelas",
+              type: "select",
+              options: [
+                "X IPA 1",
+                "X IPA 2",
+                "X IPS 1",
+                "X IPS 2",
+                "XI IPA 1",
+                "XI IPA 2",
+                "XI IPS 1",
+                "XI IPS 2",
+                "XII IPA 1",
+                "XII IPA 2",
+                "XII IPS 1",
+                "XII IPS 2",
+                "X RPL",
+                "X TKJ",
+                "X MM",
+                "XI RPL",
+                "XI TKJ",
+                "XI MM",
+                "XII RPL",
+                "XII TKJ",
+                "XII MM",
+              ],
+              required: true,
+            },
+            {
+              name: "jurusan",
+              label: "Jurusan",
+              type: "select",
+              options: [
+                "IPA",
+                "IPS",
+                "Bahasa",
+                "RPL",
+                "TKJ",
+                "Multimedia",
+                "Akuntansi",
+                "Perkantoran",
+                "Lainnya",
+              ],
+              required: true,
+            },
+            {
+              name: "jenisKelamin",
+              label: "Jenis Kelamin",
+              type: "select",
+              options: ["Laki-laki", "Perempuan"],
+              required: true,
+            },
+            {
+              name: "tanggalLahir",
+              label: "Tanggal Lahir",
+              type: "date",
+              required: true,
+            },
+            {
+              name: "namaOrtu",
+              label: "Nama Orang Tua/Wali",
+              type: "text",
+              placeholder: "Nama Ayah/Ibu",
+              required: true,
+            },
+            {
+              name: "teleponOrtu",
+              label: "Telepon Ortu",
+              type: "tel",
+              placeholder: "08123456789",
+              required: true,
+            },
+            {
+              name: "alamat",
+              label: "Alamat",
+              type: "textarea",
+              placeholder: "Alamat lengkap...",
+              required: true,
+            },
+            {
+              name: "nilaiRata",
+              label: "Nilai Rata-rata",
+              type: "number",
+              placeholder: "85.5",
+              step: "0.01",
+              required: false,
+            },
+            {
+              name: "ekskul",
+              label: "Ekstrakurikuler",
+              type: "text",
+              placeholder: "OSIS, PMR, dll",
+              required: false,
+            },
+            {
+              name: "prestasi",
+              label: "Prestasi",
+              type: "textarea",
+              placeholder: "Prestasi yang pernah diraih...",
+              required: false,
+            },
+            {
+              name: "tanggalMasuk",
+              label: "Tanggal Masuk",
+              type: "date",
+              required: true,
+            },
+            {
+              name: "status",
+              label: "Status",
+              type: "select",
+              options: ["Aktif", "Pindah", "Lulus", "Drop Out"],
+              required: true,
+            },
+          ],
+        },
+        produk: {
+          label: "Data Produk",
+          icon: "fa-box",
+          color: "from-purple-500 to-purple-600",
+          fields: [
+            {
+              name: "kode",
+              label: "Kode Produk",
+              type: "text",
+              placeholder: "PRD001",
+              required: true,
+            },
+            {
+              name: "nama",
+              label: "Nama Produk",
+              type: "text",
+              placeholder: "Laptop ASUS",
+              required: true,
+            },
+            {
+              name: "kategori",
+              label: "Kategori",
+              type: "select",
+              options: [
+                "Elektronik",
+                "Pakaian",
+                "Makanan",
+                "Minuman",
+                "Perabot",
+                "Lainnya",
+              ],
+              required: true,
+            },
+            {
+              name: "hargaBeli",
+              label: "Harga Beli",
+              type: "number",
+              placeholder: "1000000",
+              required: true,
+            },
+            {
+              name: "hargaJual",
+              label: "Harga Jual",
+              type: "number",
+              placeholder: "1500000",
+              required: true,
+            },
+            {
+              name: "stok",
+              label: "Stok",
+              type: "number",
+              placeholder: "50",
+              required: true,
+            },
+            {
+              name: "satuan",
+              label: "Satuan",
+              type: "select",
+              options: ["Unit", "Pcs", "Kg", "Meter", "Liter", "Box"],
+              required: true,
+            },
+            {
+              name: "supplier",
+              label: "Supplier",
+              type: "text",
+              placeholder: "PT Supplier Sejahtera",
+              required: false,
+            },
+            {
+              name: "tanggalMasuk",
+              label: "Tanggal Masuk",
+              type: "date",
+              required: true,
+            },
+          ],
+        },
+        inventori: {
+          label: "Data Inventori",
+          icon: "fa-warehouse",
+          color: "from-orange-500 to-orange-600",
+          fields: [
+            {
+              name: "kode",
+              label: "Kode Item",
+              type: "text",
+              placeholder: "INV001",
+              required: true,
+            },
+            {
+              name: "nama",
+              label: "Nama Item",
+              type: "text",
+              placeholder: "Kursi Kantor",
+              required: true,
+            },
+            {
+              name: "lokasi",
+              label: "Lokasi",
+              type: "select",
+              options: [
+                "Gudang A",
+                "Gudang B",
+                "Ruang Meeting",
+                "Ruang Staff",
+                "Lainnya",
+              ],
+              required: true,
+            },
+            {
+              name: "kondisi",
+              label: "Kondisi",
+              type: "select",
+              options: ["Baik", "Rusak Ringan", "Rusak Berat", "Hilang"],
+              required: true,
+            },
+            {
+              name: "jumlah",
+              label: "Jumlah",
+              type: "number",
+              placeholder: "10",
+              required: true,
+            },
+            {
+              name: "pic",
+              label: "Penanggung Jawab",
+              type: "text",
+              placeholder: "Nama PIC",
+              required: false,
+            },
+            {
+              name: "tanggalBeli",
+              label: "Tanggal Pembelian",
+              type: "date",
+              required: false,
+            },
+            {
+              name: "harga",
+              label: "Harga Perolehan",
+              type: "number",
+              placeholder: "500000",
+              required: false,
+            },
+            {
+              name: "keterangan",
+              label: "Keterangan",
+              type: "textarea",
+              placeholder: "Catatan tambahan...",
+              required: false,
+            },
+          ],
+        },
+        pelanggan: {
+          label: "Data Pelanggan",
+          icon: "fa-users",
+          color: "from-pink-500 to-pink-600",
+          fields: [
+            {
+              name: "id",
+              label: "ID Pelanggan",
+              type: "text",
+              placeholder: "PLG001",
+              required: true,
+            },
+            {
+              name: "nama",
+              label: "Nama Lengkap",
+              type: "text",
+              placeholder: "Jane Doe",
+              required: true,
+            },
+            {
+              name: "jenisKelamin",
+              label: "Jenis Kelamin",
+              type: "select",
+              options: ["Laki-laki", "Perempuan"],
+              required: true,
+            },
+            {
+              name: "email",
+              label: "Email",
+              type: "email",
+              placeholder: "customer@email.com",
+              required: false,
+            },
+            {
+              name: "telepon",
+              label: "No. Telepon",
+              type: "tel",
+              placeholder: "08123456789",
+              required: true,
+            },
+            {
+              name: "alamat",
+              label: "Alamat",
+              type: "textarea",
+              placeholder: "Alamat lengkap...",
+              required: true,
+            },
+            {
+              name: "kota",
+              label: "Kota",
+              type: "text",
+              placeholder: "Jakarta",
+              required: false,
+            },
+            {
+              name: "tanggalDaftar",
+              label: "Tanggal Daftar",
+              type: "date",
+              required: true,
+            },
+            {
+              name: "tipe",
+              label: "Tipe Pelanggan",
+              type: "select",
+              options: ["Regular", "Member", "VIP", "Corporate"],
+              required: true,
+            },
+          ],
+        },
+        transaksi: {
+          label: "Data Transaksi",
+          icon: "fa-receipt",
+          color: "from-teal-500 to-teal-600",
+          fields: [
+            {
+              name: "noTransaksi",
+              label: "No. Transaksi",
+              type: "text",
+              placeholder: "TRX001",
+              required: true,
+            },
+            { name: "tanggal", label: "Tanggal", type: "date", required: true },
+            {
+              name: "pelanggan",
+              label: "Nama Pelanggan",
+              type: "text",
+              placeholder: "Nama pelanggan",
+              required: true,
+            },
+            {
+              name: "produk",
+              label: "Produk",
+              type: "text",
+              placeholder: "Nama produk",
+              required: true,
+            },
+            {
+              name: "jumlah",
+              label: "Jumlah",
+              type: "number",
+              placeholder: "2",
+              required: true,
+            },
+            {
+              name: "hargaSatuan",
+              label: "Harga Satuan",
+              type: "number",
+              placeholder: "100000",
+              required: true,
+            },
+            {
+              name: "total",
+              label: "Total",
+              type: "number",
+              placeholder: "200000",
+              required: true,
+            },
+            {
+              name: "metode",
+              label: "Metode Pembayaran",
+              type: "select",
+              options: [
+                "Cash",
+                "Transfer",
+                "Kartu Kredit",
+                "E-Wallet",
+                "Debit",
+              ],
+              required: true,
+            },
+            {
+              name: "status",
+              label: "Status",
+              type: "select",
+              options: ["Lunas", "Pending", "Cancel"],
+              required: true,
+            },
+          ],
+        },
+        pasien: {
+          label: "Data Pasien",
+          icon: "fa-user-md",
+          color: "from-red-500 to-red-600",
+          fields: [
+            {
+              name: "noRM",
+              label: "No. Rekam Medis",
+              type: "text",
+              placeholder: "RM001",
+              required: true,
+            },
+            {
+              name: "nama",
+              label: "Nama Pasien",
+              type: "text",
+              placeholder: "Ahmad Fauzi",
+              required: true,
+            },
+            {
+              name: "jenisKelamin",
+              label: "Jenis Kelamin",
+              type: "select",
+              options: ["Laki-laki", "Perempuan"],
+              required: true,
+            },
+            {
+              name: "tanggalLahir",
+              label: "Tanggal Lahir",
+              type: "date",
+              required: true,
+            },
+            {
+              name: "golonganDarah",
+              label: "Gol. Darah",
+              type: "select",
+              options: [
+                "A",
+                "B",
+                "AB",
+                "O",
+                "A+",
+                "A-",
+                "B+",
+                "B-",
+                "AB+",
+                "AB-",
+                "O+",
+                "O-",
+              ],
+              required: false,
+            },
+            {
+              name: "telepon",
+              label: "No. Telepon",
+              type: "tel",
+              placeholder: "08123456789",
+              required: true,
+            },
+            {
+              name: "alamat",
+              label: "Alamat",
+              type: "textarea",
+              placeholder: "Alamat lengkap...",
+              required: true,
+            },
+            {
+              name: "keluhan",
+              label: "Keluhan Utama",
+              type: "text",
+              placeholder: "Demam, batuk, dll",
+              required: false,
+            },
+            {
+              name: "dokter",
+              label: "Dokter Penanggung Jawab",
+              type: "text",
+              placeholder: "Dr. ...",
+              required: false,
+            },
+            {
+              name: "tanggalDaftar",
+              label: "Tanggal Daftar",
+              type: "date",
+              required: true,
+            },
+            {
+              name: "status",
+              label: "Status",
+              type: "select",
+              options: ["Rawat Inap", "Rawat Jalan", "Selesai", "Dirujuk"],
+              required: true,
+            },
+          ],
+        },
+        buku: {
+          label: "Data Buku",
+          icon: "fa-book",
+          color: "from-yellow-500 to-yellow-600",
+          fields: [
+            {
+              name: "isbn",
+              label: "ISBN",
+              type: "text",
+              placeholder: "978-3-16-148410-0",
+              required: true,
+            },
+            {
+              name: "judul",
+              label: "Judul Buku",
+              type: "text",
+              placeholder: "Judul Buku",
+              required: true,
+            },
+            {
+              name: "pengarang",
+              label: "Pengarang",
+              type: "text",
+              placeholder: "Nama Pengarang",
+              required: true,
+            },
+            {
+              name: "penerbit",
+              label: "Penerbit",
+              type: "text",
+              placeholder: "Nama Penerbit",
+              required: true,
+            },
+            {
+              name: "tahunTerbit",
+              label: "Tahun Terbit",
+              type: "number",
+              placeholder: "2024",
+              required: true,
+            },
+            {
+              name: "kategori",
+              label: "Kategori",
+              type: "select",
+              options: [
+                "Fiksi",
+                "Non-Fiksi",
+                "Pendidikan",
+                "Teknologi",
+                "Sejarah",
+                "Agama",
+                "Sains",
+                "Lainnya",
+              ],
+              required: true,
+            },
+            {
+              name: "rak",
+              label: "Lokasi Rak",
+              type: "text",
+              placeholder: "A-12-3",
+              required: false,
+            },
+            {
+              name: "stok",
+              label: "Jumlah Stok",
+              type: "number",
+              placeholder: "5",
+              required: true,
+            },
+            {
+              name: "status",
+              label: "Status",
+              type: "select",
+              options: ["Tersedia", "Dipinjam", "Rusak", "Hilang"],
+              required: true,
+            },
+          ],
+        },
+        kendaraan: {
+          label: "Data Kendaraan",
+          icon: "fa-car",
+          color: "from-cyan-500 to-cyan-600",
+          fields: [
+            {
+              name: "noPolisi",
+              label: "No. Polisi",
+              type: "text",
+              placeholder: "B 1234 ABC",
+              required: true,
+            },
+            {
+              name: "merk",
+              label: "Merk",
+              type: "text",
+              placeholder: "Toyota, Honda, dll",
+              required: true,
+            },
+            {
+              name: "tipe",
+              label: "Tipe/Model",
+              type: "text",
+              placeholder: "Avanza, Jazz, dll",
+              required: true,
+            },
+            {
+              name: "tahun",
+              label: "Tahun Pembuatan",
+              type: "number",
+              placeholder: "2020",
+              required: true,
+            },
+            {
+              name: "warna",
+              label: "Warna",
+              type: "text",
+              placeholder: "Hitam, Putih, dll",
+              required: false,
+            },
+            {
+              name: "jenis",
+              label: "Jenis Kendaraan",
+              type: "select",
+              options: ["Mobil", "Motor", "Truk", "Bus", "Lainnya"],
+              required: true,
+            },
+            {
+              name: "pemilik",
+              label: "Nama Pemilik",
+              type: "text",
+              placeholder: "Nama pemilik",
+              required: true,
+            },
+            {
+              name: "alamat",
+              label: "Alamat Pemilik",
+              type: "textarea",
+              placeholder: "Alamat lengkap...",
+              required: false,
+            },
+            {
+              name: "tanggalRegistrasi",
+              label: "Tanggal Registrasi",
+              type: "date",
+              required: true,
+            },
+            {
+              name: "status",
+              label: "Status",
+              type: "select",
+              options: ["Aktif", "Non-Aktif", "Dijual", "Rusak"],
+              required: true,
+            },
+          ],
+        },
+        proyek: {
+          label: "Data Proyek",
+          icon: "fa-project-diagram",
+          color: "from-indigo-500 to-indigo-600",
+          fields: [
+            {
+              name: "kodeProyek",
+              label: "Kode Proyek",
+              type: "text",
+              placeholder: "PRJ001",
+              required: true,
+            },
+            {
+              name: "namaProyek",
+              label: "Nama Proyek",
+              type: "text",
+              placeholder: "Nama Proyek",
+              required: true,
+            },
+            {
+              name: "klien",
+              label: "Nama Klien",
+              type: "text",
+              placeholder: "Nama klien/perusahaan",
+              required: true,
+            },
+            {
+              name: "manager",
+              label: "Project Manager",
+              type: "text",
+              placeholder: "Nama PM",
+              required: true,
+            },
+            {
+              name: "tanggalMulai",
+              label: "Tanggal Mulai",
+              type: "date",
+              required: true,
+            },
+            {
+              name: "tanggalSelesai",
+              label: "Tanggal Selesai",
+              type: "date",
+              required: false,
+            },
+            {
+              name: "budget",
+              label: "Anggaran (Rp)",
+              type: "number",
+              placeholder: "100000000",
+              required: false,
+            },
+            {
+              name: "prioritas",
+              label: "Prioritas",
+              type: "select",
+              options: ["Rendah", "Sedang", "Tinggi", "Kritis"],
+              required: true,
+            },
+            {
+              name: "progress",
+              label: "Progress (%)",
+              type: "number",
+              placeholder: "0",
+              min: "0",
+              max: "100",
+              required: false,
+            },
+            {
+              name: "status",
+              label: "Status",
+              type: "select",
+              options: [
+                "Planning",
+                "On Progress",
+                "Testing",
+                "Completed",
+                "On Hold",
+                "Cancelled",
+              ],
+              required: true,
+            },
+            {
+              name: "deskripsi",
+              label: "Deskripsi",
+              type: "textarea",
+              placeholder: "Deskripsi proyek...",
+              required: false,
+            },
+          ],
+        },
+        keuangan: {
+          label: "Data Keuangan",
+          icon: "fa-wallet",
+          color: "from-emerald-500 to-emerald-600",
+          fields: [
+            {
+              name: "noTransaksi",
+              label: "No. Transaksi",
+              type: "text",
+              placeholder: "TRX001",
+              required: true,
+            },
+            { name: "tanggal", label: "Tanggal", type: "date", required: true },
+            {
+              name: "kategori",
+              label: "Kategori",
+              type: "select",
+              options: [
+                "Pemasukan",
+                "Pengeluaran",
+                "Transfer",
+                "Investasi",
+                "Lainnya",
+              ],
+              required: true,
+            },
+            {
+              name: "jenis",
+              label: "Jenis",
+              type: "select",
+              options: [
+                "Gaji",
+                "Bonus",
+                "Operasional",
+                "Marketing",
+                "Transport",
+                "Makanan",
+                "Utilitas",
+                "Lainnya",
+              ],
+              required: true,
+            },
+            {
+              name: "deskripsi",
+              label: "Deskripsi",
+              type: "text",
+              placeholder: "Keterangan transaksi",
+              required: true,
+            },
+            {
+              name: "jumlah",
+              label: "Jumlah (Rp)",
+              type: "number",
+              placeholder: "1000000",
+              required: true,
+            },
+            {
+              name: "metode",
+              label: "Metode Pembayaran",
+              type: "select",
+              options: [
+                "Cash",
+                "Transfer Bank",
+                "Kartu Kredit",
+                "Debit",
+                "E-Wallet",
+                "Lainnya",
+              ],
+              required: true,
+            },
+            {
+              name: "akun",
+              label: "Akun/Wallet",
+              type: "text",
+              placeholder: "BCA, GoPay, dll",
+              required: false,
+            },
+            {
+              name: "bukti",
+              label: "No. Bukti/Referensi",
+              type: "text",
+              placeholder: "Bukti transaksi",
+              required: false,
+            },
+            {
+              name: "catatan",
+              label: "Catatan",
+              type: "textarea",
+              placeholder: "Catatan tambahan...",
+              required: false,
+            },
+          ],
+        },
+        supplier: {
+          label: "Data Supplier",
+          icon: "fa-truck",
+          color: "from-rose-500 to-rose-600",
+          fields: [
+            {
+              name: "kode",
+              label: "Kode Supplier",
+              type: "text",
+              placeholder: "SUP001",
+              required: true,
+            },
+            {
+              name: "nama",
+              label: "Nama Perusahaan",
+              type: "text",
+              placeholder: "PT Supplier Sejahtera",
+              required: true,
+            },
+            {
+              name: "pic",
+              label: "Nama PIC",
+              type: "text",
+              placeholder: "Nama penanggung jawab",
+              required: true,
+            },
+            {
+              name: "telepon",
+              label: "No. Telepon",
+              type: "tel",
+              placeholder: "021-1234567",
+              required: true,
+            },
+            {
+              name: "email",
+              label: "Email",
+              type: "email",
+              placeholder: "supplier@email.com",
+              required: false,
+            },
+            {
+              name: "alamat",
+              label: "Alamat",
+              type: "textarea",
+              placeholder: "Alamat lengkap...",
+              required: true,
+            },
+            {
+              name: "kota",
+              label: "Kota",
+              type: "text",
+              placeholder: "Jakarta",
+              required: true,
+            },
+            {
+              name: "kategori",
+              label: "Kategori Produk",
+              type: "select",
+              options: [
+                "Elektronik",
+                "Pakaian",
+                "Makanan",
+                "Minuman",
+                "Perabot",
+                "Bahan Baku",
+                "Lainnya",
+              ],
+              required: true,
+            },
+            {
+              name: "tanggalKerjasama",
+              label: "Tanggal Kerjasama",
+              type: "date",
+              required: true,
+            },
+            {
+              name: "status",
+              label: "Status",
+              type: "select",
+              options: ["Aktif", "Non-Aktif", "Blacklist", "Pending"],
+              required: true,
+            },
+          ],
+        },
+        jadwal: {
+          label: "Jadwal/Event",
+          icon: "fa-calendar-alt",
+          color: "from-violet-500 to-violet-600",
+          fields: [
+            {
+              name: "kode",
+              label: "Kode Event",
+              type: "text",
+              placeholder: "EVT001",
+              required: true,
+            },
+            {
+              name: "judul",
+              label: "Judul Event",
+              type: "text",
+              placeholder: "Meeting, Workshop, dll",
+              required: true,
+            },
+            { name: "tanggal", label: "Tanggal", type: "date", required: true },
+            {
+              name: "waktuMulai",
+              label: "Waktu Mulai",
+              type: "time",
+              required: true,
+            },
+            {
+              name: "waktuSelesai",
+              label: "Waktu Selesai",
+              type: "time",
+              required: false,
+            },
+            {
+              name: "lokasi",
+              label: "Lokasi",
+              type: "text",
+              placeholder: "Ruang meeting, Zoom, dll",
+              required: true,
+            },
+            {
+              name: "pic",
+              label: "Penanggung Jawab",
+              type: "text",
+              placeholder: "Nama PIC",
+              required: true,
+            },
+            {
+              name: "peserta",
+              label: "Jumlah Peserta",
+              type: "number",
+              placeholder: "10",
+              required: false,
+            },
+            {
+              name: "tipe",
+              label: "Tipe Event",
+              type: "select",
+              options: [
+                "Meeting",
+                "Training",
+                "Workshop",
+                "Seminar",
+                "Conference",
+                "Lainnya",
+              ],
+              required: true,
+            },
+            {
+              name: "deskripsi",
+              label: "Deskripsi",
+              type: "textarea",
+              placeholder: "Agenda/Deskripsi event...",
+              required: false,
+            },
+            {
+              name: "status",
+              label: "Status",
+              type: "select",
+              options: [
+                "Scheduled",
+                "On Going",
+                "Completed",
+                "Cancelled",
+                "Postponed",
+              ],
+              required: true,
+            },
+          ],
+        },
+      };
+
+      // State Management
+      let currentType = "karyawan";
+      let dataStore =
+        JSON.parse(localStorage.getItem("universalDataStore")) || {};
+      let editingId = null;
+
+      // Initialize
+      document.addEventListener("DOMContentLoaded", () => {
+        renderMenu();
+        loadType(currentType);
+      });
+
+      // Render Menu Cards
+      function renderMenu() {
+        const container = document.getElementById("menuContainer");
+        container.innerHTML = Object.entries(dataTemplates)
+          .map(
+            ([key, template]) => `
+                <div class="menu-card glass-panel rounded-2xl p-4 text-center ${key === currentType ? "active" : ""} relative" 
+                     onclick="switchType('${key}')" id="menu-${key}">
+                    ${template.badge ? `<div class="level-badge ${template.badgeColor}">${template.badge}</div>` : ""}
+                    <div class="w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-br ${template.color} flex items-center justify-center text-white text-xl shadow-lg">
+                        <i class="fas ${template.icon}"></i>
+                    </div>
+                    <h4 class="font-semibold text-sm">${template.label}</h4>
+                    <div class="mt-2 text-xs opacity-75">${getDataCount(key)} items</div>
+                </div>
+            `,
+          )
+          .join("");
+      }
+
+      function getDataCount(type) {
+        return (dataStore[type] || []).length;
+      }
+
+      // Switch Data Type
+      function switchType(type) {
+        currentType = type;
+
+        // Update menu styling
+        document.querySelectorAll(".menu-card").forEach((card) => {
+          card.classList.remove("active");
+        });
+        document.getElementById(`menu-${type}`).classList.add("active");
+
+        loadType(type);
+      }
+
+      // Load Type Configuration
+      function loadType(type) {
+        const template = dataTemplates[type];
+
+        // Update titles
+        document.getElementById("formTitle").textContent =
+          `Form ${template.label}`;
+        document.getElementById("currentDataType").textContent =
+          template.label.replace("Data ", "");
+
+        // Generate form fields
+        generateFormFields(template.fields);
+
+        // Update table
+        updateTable();
+        updateStats();
+      }
+
+      // Generate Form Fields
+      function generateFormFields(fields) {
+        const container = document.getElementById("formFields");
+        container.innerHTML = fields
+          .map((field) => {
+            if (field.type === "select") {
+              return `
+                        <div class="form-group">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                ${field.label} ${field.required ? '<span class="text-red-500">*</span>' : ""}
+                            </label>
+                            <select name="${field.name}" ${field.required ? "required" : ""} 
+                                class="form-input w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 bg-white">
+                                <option value="">Pilih ${field.label}</option>
+                                ${field.options.map((opt) => `<option value="${opt}">${opt}</option>`).join("")}
+                            </select>
+                        </div>
+                    `;
+            } else if (field.type === "textarea") {
+              return `
+                        <div class="form-group">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                ${field.label} ${field.required ? '<span class="text-red-500">*</span>' : ""}
+                            </label>
+                            <textarea name="${field.name}" ${field.required ? "required" : ""} 
+                                placeholder="${field.placeholder || ""}"
+                                class="form-input w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 resize-none h-20"></textarea>
+                        </div>
+                    `;
+            } else {
+              return `
+                        <div class="form-group">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                ${field.label} ${field.required ? '<span class="text-red-500">*</span>' : ""}
+                            </label>
+                            <input type="${field.type}" name="${field.name}" ${field.required ? "required" : ""} 
+                                placeholder="${field.placeholder || ""}" ${field.step ? `step="${field.step}"` : ""} ${field.min ? `min="${field.min}"` : ""} ${field.max ? `max="${field.max}"` : ""}
+                                class="form-input w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500">
+                        </div>
+                    `;
+            }
+          })
+          .join("");
+      }
+
+      // Form Submit Handler
+      document.getElementById("dataForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(e.target);
+        const data = {};
+
+        dataTemplates[currentType].fields.forEach((field) => {
+          data[field.name] = formData.get(field.name) || "";
+        });
+
+        // Add metadata
+        data._id = editingId || Date.now().toString();
+        data._createdAt = editingId
+          ? dataStore[currentType].find((d) => d._id === editingId)
+              ?._createdAt || new Date().toISOString()
+          : new Date().toISOString();
+        data._updatedAt = new Date().toISOString();
+
+        // Initialize array if not exists
+        if (!dataStore[currentType]) {
+          dataStore[currentType] = [];
+        }
+
+        if (editingId) {
+          // Update existing
+          const index = dataStore[currentType].findIndex(
+            (d) => d._id === editingId,
+          );
+          if (index !== -1) {
+            dataStore[currentType][index] = data;
+            showToast("Data berhasil diupdate!", "success");
+          }
+          editingId = null;
+          document.getElementById("submitBtnText").textContent = "Simpan Data";
+        } else {
+          // Add new
+          dataStore[currentType].push(data);
+          showToast("Data berhasil ditambahkan!", "success");
+        }
+
+        // Save to localStorage
+        localStorage.setItem("universalDataStore", JSON.stringify(dataStore));
+
+        // Reset and refresh
+        e.target.reset();
+        updateTable();
+        updateStats();
+        renderMenu(); // Update counts
+      });
+
+      // Update Table
+      function updateTable() {
+        const data = dataStore[currentType] || [];
+        const fields = dataTemplates[currentType].fields;
+
+        // Update record count
+        document.getElementById("recordCount").textContent =
+          `${data.length} records`;
+
+        // Empty state
+        const emptyState = document.getElementById("emptyState");
+        if (data.length === 0) {
+          emptyState.classList.remove("hidden");
+          document.getElementById("tableHeader").innerHTML = "";
+          document.getElementById("tableBody").innerHTML = "";
+          return;
+        }
+        emptyState.classList.add("hidden");
+
+        // Generate headers
+        const headerHTML = `
+                <tr>
+                    <th class="px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">No</th>
+                    ${fields.map((f) => `<th class="px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">${f.label}</th>`).join("")}
+                    <th class="px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider text-center">Aksi</th>
+                </tr>
+            `;
+        document.getElementById("tableHeader").innerHTML = headerHTML;
+
+        // Generate rows
+        const tbodyHTML = data
+          .map(
+            (item, index) => `
+                <tr class="data-row hover:bg-gray-50 transition-colors border-b border-gray-100">
+                    <td class="px-4 py-3 text-sm text-gray-600">${index + 1}</td>
+                    ${fields
+                      .map((f) => {
+                        let value = item[f.name] || "-";
+                        if (f.type === "date" && value !== "-" && value) {
+                          try {
+                            value = new Date(value).toLocaleDateString("id-ID");
+                          } catch (e) {
+                            value = item[f.name];
+                          }
+                        }
+                        // Truncate long text
+                        if (typeof value === "string" && value.length > 30) {
+                          value = value.substring(0, 30) + "...";
+                        }
+                        return `<td class="px-4 py-3 text-sm text-gray-800">${value}</td>`;
+                      })
+                      .join("")}
+                    <td class="px-4 py-3 text-center">
+                        <div class="flex justify-center gap-2">
+                            <button onclick="editData('${item._id}')" class="edit-btn w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center" title="Edit">
+                                <i class="fas fa-edit text-xs"></i>
+                            </button>
+                            <button onclick="deleteData('${item._id}')" class="delete-btn w-8 h-8 rounded-lg bg-red-100 text-red-600 flex items-center justify-center" title="Hapus">
+                                <i class="fas fa-trash text-xs"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `,
+          )
+          .join("");
+
+        document.getElementById("tableBody").innerHTML = tbodyHTML;
+      }
+
+      // Edit Data
+      function editData(id) {
+        const data = dataStore[currentType].find((d) => d._id === id);
+        if (!data) return;
+
+        editingId = id;
+        document.getElementById("submitBtnText").textContent = "Update Data";
+
+        // Fill form
+        const form = document.getElementById("dataForm");
+        dataTemplates[currentType].fields.forEach((field) => {
+          const input = form.querySelector(`[name="${field.name}"]`);
+          if (input) {
+            input.value = data[field.name] || "";
+          }
+        });
+
+        // Scroll to form
+        document
+          .querySelector(".glass-panel")
+          .scrollIntoView({ behavior: "smooth" });
+        showToast("Mode edit aktif", "info");
+      }
+
+      // Delete Data
+      function deleteData(id) {
+        if (!confirm("Apakah Anda yakin ingin menghapus data ini?")) return;
+
+        dataStore[currentType] = dataStore[currentType].filter(
+          (d) => d._id !== id,
+        );
+        localStorage.setItem("universalDataStore", JSON.stringify(dataStore));
+
+        updateTable();
+        updateStats();
+        renderMenu();
+        showToast("Data berhasil dihapus!", "success");
+      }
+
+      // Clear All Data
+      function clearAllData() {
+        if (
+          !confirm(
+            `Apakah Anda yakin ingin menghapus SEMUA data ${dataTemplates[currentType].label}?`,
+          )
+        )
+          return;
+
+        dataStore[currentType] = [];
+        localStorage.setItem("universalDataStore", JSON.stringify(dataStore));
+
+        updateTable();
+        updateStats();
+        renderMenu();
+        showToast("Semua data telah dihapus!", "success");
+      }
+
+      // Reset Form
+      function resetForm() {
+        document.getElementById("dataForm").reset();
+        editingId = null;
+        document.getElementById("submitBtnText").textContent = "Simpan Data";
+      }
+
+      // Search Data
+      function searchData() {
+        const searchTerm = document
+          .getElementById("searchInput")
+          .value.toLowerCase();
+        const rows = document.querySelectorAll("#tableBody tr");
+
+        rows.forEach((row) => {
+          const text = row.textContent.toLowerCase();
+          row.style.display = text.includes(searchTerm) ? "" : "none";
+        });
+      }
+
+      // Update Statistics
+      function updateStats() {
+        const data = dataStore[currentType] || [];
+        document.getElementById("totalRecords").textContent = data.length;
+
+        const today = new Date().toDateString();
+        const todayCount = data.filter(
+          (d) => new Date(d._createdAt).toDateString() === today,
+        ).length;
+        document.getElementById("todayRecords").textContent = todayCount;
+      }
+
+      // Export to CSV
+      function exportData() {
+        const data = dataStore[currentType] || [];
+        if (data.length === 0) {
+          showToast("Tidak ada data untuk diexport!", "error");
+          return;
+        }
+
+        const fields = dataTemplates[currentType].fields;
+        const headers = fields.map((f) => f.label).join(",");
+
+        const rows = data
+          .map((item) => {
+            return fields
+              .map((f) => {
+                let val = item[f.name] || "";
+                // Escape quotes and wrap in quotes if contains comma
+                if (val.includes(",") || val.includes('"')) {
+                  val = `"${val.replace(/"/g, '""')}"`;
+                }
+                return val;
+              })
+              .join(",");
+          })
+          .join("\n");
+
+        const csv = "\uFEFF" + headers + "\n" + rows; // BOM for Excel
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `${currentType}_${new Date().toISOString().split("T")[0]}.csv`;
+        link.click();
+
+        showToast("Data berhasil diexport!", "success");
+      }
+
+      // Import from CSV
+      function importData(input) {
+        const file = input.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const text = e.target.result;
+            const lines = text.split("\n").filter((line) => line.trim());
+            const headers = lines[0]
+              .split(",")
+              .map((h) => h.trim().replace(/"/g, ""));
+
+            const fields = dataTemplates[currentType].fields;
+
+            // Map CSV headers to field names
+            const newData = [];
+            for (let i = 1; i < lines.length; i++) {
+              const values = parseCSVLine(lines[i]);
+              const item = {
+                _id: Date.now().toString() + i,
+                _createdAt: new Date().toISOString(),
+              };
+
+              fields.forEach((field, index) => {
+                if (values[index]) {
+                  item[field.name] = values[index].trim().replace(/"/g, "");
+                }
+              });
+
+              newData.push(item);
+            }
+
+            // Append to existing data
+            if (!dataStore[currentType]) dataStore[currentType] = [];
+            dataStore[currentType] = [...dataStore[currentType], ...newData];
+            localStorage.setItem(
+              "universalDataStore",
+              JSON.stringify(dataStore),
+            );
+
+            updateTable();
+            updateStats();
+            renderMenu();
+            showToast(`Berhasil import ${newData.length} data!`, "success");
+          } catch (err) {
+            showToast("Error membaca file CSV!", "error");
+            console.error(err);
+          }
+
+          input.value = "";
+        };
+        reader.readAsText(file);
+      }
+
+      // Parse CSV line handling quotes
+      function parseCSVLine(line) {
+        const result = [];
+        let current = "";
+        let inQuotes = false;
+
+        for (let i = 0; i < line.length; i++) {
+          const char = line[i];
+
+          if (char === '"') {
+            if (inQuotes && line[i + 1] === '"') {
+              current += '"';
+              i++;
+            } else {
+              inQuotes = !inQuotes;
+            }
+          } else if (char === "," && !inQuotes) {
+            result.push(current);
+            current = "";
+          } else {
+            current += char;
+          }
+        }
+        result.push(current);
+        return result;
+      }
+
+      // Toast Notification
+      function showToast(message, type = "success") {
+        const toast = document.getElementById("toast");
+        const icon = document.getElementById("toastIcon");
+        const msg = document.getElementById("toastMessage");
+
+        const icons = {
+          success: "fa-check-circle text-green-400",
+          error: "fa-exclamation-circle text-red-400",
+          info: "fa-info-circle text-blue-400",
+        };
+
+        icon.className = `fas ${icons[type]}`;
+        msg.textContent = message;
+
+        toast.classList.remove("translate-y-20", "opacity-0");
+
+        setTimeout(() => {
+          toast.classList.add("translate-y-20", "opacity-0");
+        }, 3000);
+      }
+    </script>
+  </body>
+</html>
